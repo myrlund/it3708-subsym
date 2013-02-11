@@ -5,40 +5,56 @@ import sys
 #A Individual in the population
 class Individual:
     genotype = None
-    def __init__(self, genotype):
-        self.genotype = genotype
-        
-#Create and contain the population for the EA
-class Population:
+    phenotype = []
+    nr_of_bits = 20
+    fitness = 0
     
-    nr_of_bits = 20;
-    population_size = 0;
-    population = []
+    def __init__(self, genotype=None):
+        if genotype is None:
+            genotype = Individual.random_genotype()
+        
+    def random_genotype(self):
+        self.genotype = random.getrandbits(self.nr_of_bits)
+                 
+    #Mutate the genotypes, with a probability of mutation_prob  
+    def mutate(self, mutation_prob):
+        if random.random() < self.mutation_prob:
+            mutated_genotype = self.genotype ^ (1 << random.randint(0, self.nr_of_bits))
+        else:
+            mutated_genotype = self.genotype
+        return mutated_genotype
+        
+    #Perform crossover on genotypes
+    def crossover(self, individual2, crossover_rate):
+        crossover_range = (2, 5)
+        splits = [(i % 2, random.randint(*crossover_range)) for i in range(self.genotype_length / crossover_range[0])]
+        
+        genotypes = (num_to_bitstring(self.genotype), num_to_bitstring(other.genotype))
+        
+        new_genotype = []
+        index = 0
+        for individual, n_genes in splits:
+            to_index = min(index+n_genes, self.genotype_length)
+            new_genotype.append(genotypes[individual][index:to_index])
+            
+            if to_index >= self.genotype_length:
+                break
+            
+            index += n_genes
+        
+        return Individual(int("".join(new_genotype), 2))
     
-    def __init__(self, nr_of_bits, population_size):
-        if(nr_of_bits):
-            self.nr_of_bits = nr_of_bits
-        self.population_size = population_size
-        
-        
-    #Create a random population of solutions as bitstrings (genotype)
-    def create_population(self):
-        for i in range(0, self.population_size):
-            specimen = random.getrandbits(self.nr_of_bits)
-            self.population.append(specimen)
-        return self.population
 
+    #Develop the individual from genotype to phenotype  
+    def development(self):
+        gtype = int(self.genotype)
+        for _ in range(0, self.nr_of_bits):
+            self.phenotype.insert(0, gtype % 2)
+            gtype = gtype/2
+            
+    def calc_fitness(self):
+        self.fitness = FitnessEval().calc_fitness(self.phenotype)
 
-#Develop the individuals from genotype to phenotype  
-class Development:
-    
-    def development(self, genotype, nr_of_bits):
-        phenotype = []
-        genotype = int(genotype)
-        for _ in range(0, nr_of_bits):
-            phenotype.insert(0, genotype % 2)
-            genotype = genotype/2
-        return phenotype
         
 
 #Contains the different selection protocols
@@ -68,42 +84,42 @@ class Selection:
     
     #SELECTION MECHANISMS    
     #Fitness proportionate scaling of fitness and spins the wheel
-    def fitness_proportionate(self, population_fitness):
+    def fitness_proportionate(self, population, sum_fitness):
         expected_mating = []
-        average_fitness = sum(population_fitness)/len(population_fitness)
+        average_fitness = sum_fitness/len(population)
         mating_wheel = []
-        for i in range(0, population_fitness):
-            expected_mating = round(population_fitness[i]/average_fitness)
+        for p in range(0, population):
+            expected_mating = round(p.fitness/average_fitness)
             for _ in range(0, expected_mating):
-                mating_wheel.append(i) #Indexes
+                mating_wheel.append(p) 
             
         #THEN SPIN ZE WHEEEEL
         reproducers = []
-        for _ in range(0, len(population_fitness)):
+        for _ in range(0, len(population)):
             reproducers.append( mating_wheel[random.randint(0,len(mating_wheel)-1)] )
         
         return reproducers
        
     #Sigma scaling of fitness and spins the wheel 
-    def sigma_scaling(self, population_fitness):
+    def sigma_scaling(self, population, sum_fitness):
         expected_mating = []
-        average_fitness = sum(population_fitness)/len(population_fitness)
-        standard_deviation = sum( map(lambda x: (x - average_fitness)**2, population_fitness) )
+        average_fitness = sum_fitness/len(population)
+        standard_deviation = sum( map(lambda x: (x - average_fitness)**2, sum_fitness) )
         mating_wheel = []
-        for i in range(0, population_fitness):
-            expected_mating = 1 + ( (population_fitness[i]-average_fitness) / 2*standard_deviation )
+        for p in range(0, population):
+            expected_mating = 1 + ( (p.fitness-average_fitness) / 2*standard_deviation )
             for _ in range(0, expected_mating):
-                mating_wheel.append(i) #Indexes
+                mating_wheel.append(p) #Indexes
         #THEN SPIN ZE WHEEEEL
         reproducers = []
-        for _ in range(0, len(population_fitness)):
+        for _ in range(0, len(population)):
             reproducers.append( mating_wheel[random.randint(0,len(mating_wheel)-1)] )
         
         return reproducers
         
     #Rank scaling of fitness and spins the wheel
     #TODO
-    def rank(self, population_fitness):
+    def rank(self, population_fitness, sum_fitness):
         expected_mating = []
         average_fitness = sum(population_fitness)/len(population_fitness)
         mating_wheel = []
@@ -121,45 +137,24 @@ class Selection:
     
 
     #Selects the index of the reproducers in the population by means of local k-tournament, currently only works on popsizes divisible by k
-    def k_tournament(self, population_fitness, k, e):
+    def k_tournament(self, population, k, e):
         reproducers = []
         group_k = k
-        for i in range(0, len(population_fitness)):
+        for i in range(0, len(population)):
             if i == group_k-1:
                 #FACE-OFF!
-                tournament_group = population_fitness[(i-(k-1)):group_k]
+                tournament_group = population[(i-(k-1)):group_k]
                 if random.random()<e:
-                    reproducers.append( random.randint(0, k-1) + (group_k-k) )
+                    reproducers.append( population[random.randint(0, k-1) + (group_k-k)] )
                 else:
-                    reproducers.append( tournament_group.index(max(tournament_group)) + (group_k-k) )
+                    reproducers.append( population[tournament_group.index(max(tournament_group)) + (group_k-k)] )
                 group_k = group_k + k
         return reproducers
         
 
-#Perform genetic operations on the genotype
-class GeneticOperators:
-
-    mutation_prob = 0
-    
-    def __init__(self, mutation_prob):
-        self.mutation_prob = mutation_prob
-        
-    #Randomly mutate the genotype,
-    #i.e. pick a random bit and flip it
-    def mutate(self, genotype, nr_of_bits):
-        if random.random() < self.mutation_prob:
-            mutated_genotype = genotype ^ (1 << random.randint(0, nr_of_bits))
-        else:
-            mutated_genotype = genotype
-        return mutated_genotype
-        
-    #Perform crossover on genotypes
-    def crossover(self, individual1, individual2, crossover_rate):
-        return False
-
-
 if __name__ == '__main__':
     
+
 #    # 1. Create initial random population, develop to phenotype
 #    # 2. Evaluate the fitness of each individual in the Population, do we have solution?
 #    # 3. Select the individuals to reproduce

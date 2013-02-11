@@ -2,9 +2,7 @@
 import sys
 from FitnessEval import FitnessEval
 from EAOperators import Selection
-from EAOperators import Population
-from EAOperators import Development
-from EAOperators import GeneticOperators
+from EAOperators import Individual
 from Plotting import Plotting
 
 class EA:
@@ -19,8 +17,8 @@ class EA:
     mutation_count = 1 #Number of bits mutated when mutating
     population_genotype = []
     population_fitness = []
-    mutated_genotypes = []
     new_generation = []
+    children = []
     reproducers = []
     population = []
     
@@ -31,52 +29,49 @@ class EA:
     fitness = None
     
     def __init__(self):
-        self.develops = Development()
         self.selects = Selection()
-        self.operates = GeneticOperators(self.mutation_probability)
-        self.populates = Population(self.nr_of_bits, self.population_size)
         self.fitness = FitnessEval()
         self.plotter = Plotting(self)
         
     def create(self):
-        self.population_genotype = self.populates.create_population()
+        for _ in range(0, self.population_size):
+            self.population.append(Individual())
     
     def develop(self):
-        for p in self.population_genotype:
-            self.population.append(self.develops.development(p, self.nr_of_bits))
+        for p in self.population:
+            p.development()
     
     
     def select(self):
         self.population_fitness = []
         for p in self.population:
-            self.population_fitness.append(self.fitness.calc_fitness(p))
+            p.calc_fitness()
             
-        solution = max(self.population_fitness)
-        if solution == self.nr_of_bits:
-            print "SOLUTION FOUND: "+str(solution)+ " " +str( self.population[ self.population_fitness.index(solution)] )
+        best_individual = self.sorted_population()[0]
+        if best_individual.fitness == self.nr_of_bits:
+            print "SOLUTION FOUND: "+str(best_individual.phenotype)+ " " +str( best_individual.fitness )
             sys.exit()
             
         if((self.generation%10) == 0):
             print "GENERATION:: " +str(self.generation)
-            print "Max fitness: " +str(solution) +": " + str(self.population[self.population_fitness.index(solution)])
-            print "Avg fitness: " +str( (sum(self.population_fitness)/len(self.population_fitness)) )
+            print "Max fitness: " +str(best_individual.fitness) +": " + best_individual.phenotype
+            print "Avg fitness: " +str( (self.sum_population()/len(self.population)) )
         
-    
-        self.reproducers = self.selects.k_tournament(self.population_fitness, self.k, self.e)
+        self.reproducers = self.selects.k_tournament(self.population, self.k, self.e)
     
     def reproduce(self):
-        self.children_genotypes = []
+        self.children = []
         for _ in range(0, self.k):
-            for i in self.reproducers:
-                self.children_genotypes.append(self.population_genotype[i])
-        print self.children_genotypes
+            for p in self.reproducers:
+                self.children.append(p)
+        print self.children
     
     def operate(self):
-        self.mutated_genotypes = []
-        for i in self.children_genotypes:
-            self.mutated_genotypes.append(self.operates.mutate(i, self.nr_of_bits))
-        for i in self.mutated_genotypes:
-            self.children_genotypes.append()
+        for p in self.children:
+            p.mutate(self.mutation_probability)
+        
+        for p in self.children:
+            p.crossover()
     
     def replace(self):
         new_generation = []
@@ -87,8 +82,14 @@ class EA:
         self.population_genotype = self.children_genotypes
         
     
-        
-        
+    def sorted_population(self):
+        return sorted(self.population, lambda x, y: cmp(x.fitness, y.fitness))[::-1]
+
+    def sum_population(self):
+        fitness_sum = 0
+        for p in self.population:
+            fitness_sum += p.fitness
+        return fitness_sum
     
 if __name__ == '__main__':
     ea = EA()
