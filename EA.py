@@ -1,7 +1,7 @@
 
 import sys
 from FitnessEval import FitnessEval
-from EAOperators import Individual
+from Individual import Individual
 from Plotting import Plotting
 import random
 
@@ -166,6 +166,7 @@ class Selection:
     
 
     #Selects the index of the reproducers in the population by means of local k-tournament, currently only works on popsizes divisible by k
+    #TODO: Doesn't work i thinks
     def k_tournament(self, population, k, e):
         reproducers = []
         group_k = k
