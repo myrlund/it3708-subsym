@@ -44,7 +44,6 @@ class EA:
         for p in self.population_genotype:
             self.population.append(self.develops.development(p, self.nr_of_bits))
     
-    
     def select(self):
         self.population_fitness = []
         for p in self.population:
@@ -74,7 +73,6 @@ class EA:
         self.mutated_genotypes = []
         for i in self.children_genotypes:
             self.mutated_genotypes.append(self.operates.mutate(i, self.nr_of_bits))
-            
     
     def replace(self):
         new_generation = []
