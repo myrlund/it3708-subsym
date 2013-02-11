@@ -12,8 +12,11 @@ def likeness(number1, number2):
         0
     )
 
+def genotype_fitness(genotype, genotype_length=20):
+    return likeness(genotype, 2**(genotype_length + 1) - 1)
+
 def fitness(individual):
-    return likeness(individual.genotype, 2**(individual.genotype_length + 1) - 1)
+    return genotype_fitness(individual.genotype, individual.genotype_length)
 
 def num_to_bitstring(n):
     return bin(n)[2:]
@@ -45,6 +48,13 @@ class Individual:
             0
         )
     
+    @staticmethod
+    def merge_genotypes(g1, g2):
+        return g1 & g2
+    
+    def combine_with(self, other):
+        return Individual(Individual.merge_genotypes(self.mutated_genotype(), other.mutated_genotype()))
+    
     def mutated_genotype(self):
         return self.genotype ^ Individual.random_mutation()
     
@@ -52,13 +62,73 @@ class Individual:
     def fenotype(self):
         return str(self.genotype)
     
+    @property
     def fitness(self):
         return self.fitness_fn()
     
     def __str__(self):
-        return "%s(%s)" % (self.__class__.__name__, bin(self.genotype)[2:].zfill(self.genotype_length))
+        return "%s(%d)" % (self.__class__.__name__, self.fitness) # bin(self.genotype)[2:].zfill(self.genotype_length)
+    
+    def __repr__(self):
+        return self.__str__()
+
+class World:
+    
+    # World settings
+    max_fitness = 20
+    generations = 0
+    
+    def __init__(self, population_size=20):
+        self.population_size = population_size
+        
+        # Generate a population
+        self.population = [Individual() for _ in range(self.population_size)]
+    
+    def reproduction_for_fitness(self, fitness, max_fitness=20, max_dominance=0.3):
+        """Gives back number of offspring for a given fitness rating."""
+        # max_fitness == 20, population_size == 20, max_dominance ~ 0.3
+        return 1.0 * fitness / max_fitness * self.population_size * max_dominance
+    
+    def select_parents(self):
+        """Parent selection algorithm. Returns tuples of individuals."""
+        
+        # Sort the population by fitness
+        p = sorted_individuals = self.sorted_population()
+        pairs = [(p[i], p[i+1]) for i in range(0, self.population_size, 2)]
+        
+        return pairs
+    
+    def tick(self):
+        """A generation tick."""
+        
+        self.generations += 1
+        
+        parents = self.select_parents()
+        
+        new_individuals = []
+        for parent1, parent2 in parents:
+            
+            # Combine the parents' fitnesses...
+            combined_fitness = parent1.genotype & parent2.genotype
+            
+            # ...calculate the number of offspring they deserve
+            n_offspring = min(
+                int(self.reproduction_for_fitness(combined_fitness)),
+                self.population_size - len(new_individuals)
+            )
+            
+            # ...and copulate!
+            new_individuals += [parent1.combine_with(parent2) for _ in range(n_offspring)]
+        
+        # Generation shift
+        self.population = new_individuals
+    
+    def sorted_population(self):
+        return sorted(self.population, lambda x, y: cmp(x.fitness, y.fitness))[::-1]
 
 if __name__ == '__main__':
-    i = Individual(0b10101010101010101010)
-    print num_to_bitstring(i.genotype)
-    print num_to_bitstring(i.mutated_genotype())
+    w = World()
+    print w.sorted_population()
+    w.tick()
+    print w.sorted_population()
+    
