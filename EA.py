@@ -9,13 +9,14 @@ from Plotting import Plotting
 
 class EA:
     
-    population_size = 20
-    generations = 200
-    generation = 0
-    nr_of_bits = 30
-    k = 4
-    e = 0.2
-    mutation_probability = 0.8
+    population_size = 20 #Size of the population
+    generations = 200 #Number of generations
+    generation = 0 #Current generation nr
+    nr_of_bits = 20 #Bitlength 
+    k = 4 #Group size in k_tournament
+    e = 0.2 #Probability of selecting random in k_tournament
+    mutation_probability = 0.8 #Probability that mutation of a specimen will occur
+    mutation_count = 1 #Number of bits mutated when mutating
     population_genotype = []
     population_fitness = []
     mutated_genotypes = []
@@ -43,6 +44,7 @@ class EA:
     def develop(self):
         for p in self.population_genotype:
             self.population.append(self.develops.development(p, self.nr_of_bits))
+    
     
     def select(self):
         self.population_fitness = []
@@ -73,6 +75,8 @@ class EA:
         self.mutated_genotypes = []
         for i in self.children_genotypes:
             self.mutated_genotypes.append(self.operates.mutate(i, self.nr_of_bits))
+        for i in self.mutated_genotypes:
+            self.children_genotypes.append()
     
     def replace(self):
         new_generation = []
@@ -95,5 +99,5 @@ if __name__ == '__main__':
         ea.reproduce()
         ea.operate()
         ea.replace()
-#        if((ea.generation%10) == 0):
-#            ea.plotter.plot()
+    
+    ea.plotter.plot()

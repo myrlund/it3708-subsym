@@ -1,6 +1,13 @@
 import random
 from FitnessEval import FitnessEval
 import sys
+
+#A Individual in the population
+class Individual:
+    genotype = None
+    def __init__(self, genotype):
+        self.genotype = genotype
+        
 #Create and contain the population for the EA
 class Population:
     
@@ -60,13 +67,14 @@ class Selection:
         return False
     
     #SELECTION MECHANISMS    
+    #Fitness proportionate scaling of fitness and spins the wheel
     def fitness_proportionate(self, population_fitness):
         expected_mating = []
         average_fitness = sum(population_fitness)/len(population_fitness)
         mating_wheel = []
         for i in range(0, population_fitness):
             expected_mating = round(population_fitness[i]/average_fitness)
-            for n in range(0, expected_mating):
+            for _ in range(0, expected_mating):
                 mating_wheel.append(i) #Indexes
             
         #THEN SPIN ZE WHEEEEL
@@ -74,19 +82,45 @@ class Selection:
         for _ in range(0, len(population_fitness)):
             reproducers.append( mating_wheel[random.randint(0,len(mating_wheel)-1)] )
         
-        
-                
+        return reproducers
+       
+    #Sigma scaling of fitness and spins the wheel 
     def sigma_scaling(self, population_fitness):
-        return False
+        expected_mating = []
+        average_fitness = sum(population_fitness)/len(population_fitness)
+        standard_deviation = sum( map(lambda x: (x - average_fitness)**2, population_fitness) )
+        mating_wheel = []
+        for i in range(0, population_fitness):
+            expected_mating = 1 + ( (population_fitness[i]-average_fitness) / 2*standard_deviation )
+            for _ in range(0, expected_mating):
+                mating_wheel.append(i) #Indexes
+        #THEN SPIN ZE WHEEEEL
+        reproducers = []
+        for _ in range(0, len(population_fitness)):
+            reproducers.append( mating_wheel[random.randint(0,len(mating_wheel)-1)] )
         
-    def boltzman(self):
-        return False
+        return reproducers
         
-    def rank(self):
-        return False
+    #Rank scaling of fitness and spins the wheel
+    #TODO
+    def rank(self, population_fitness):
+        expected_mating = []
+        average_fitness = sum(population_fitness)/len(population_fitness)
+        mating_wheel = []
+        for i in range(0, population_fitness):
+            expected_mating = min + (max-min)*()
+            for _ in range(0, expected_mating):
+                mating_wheel.append(i) #Indexes
+            
+        #THEN SPIN ZE WHEEEEL
+        reproducers = []
+        for _ in range(0, len(population_fitness)):
+            reproducers.append( mating_wheel[random.randint(0,len(mating_wheel)-1)] )
+        
+        return reproducers
     
+
     #Selects the index of the reproducers in the population by means of local k-tournament, currently only works on popsizes divisible by k
-    #TODO: with propability e, pick another winner in group
     def k_tournament(self, population_fitness, k, e):
         reproducers = []
         group_k = k
@@ -120,13 +154,12 @@ class GeneticOperators:
         return mutated_genotype
         
     #Perform crossover on genotypes
-    def crossover(self):
+    def crossover(self, individual1, individual2, crossover_rate):
         return False
 
 
 if __name__ == '__main__':
     
-    Development().development(0b11111101111111111111, 20)
 #    # 1. Create initial random population, develop to phenotype
 #    # 2. Evaluate the fitness of each individual in the Population, do we have solution?
 #    # 3. Select the individuals to reproduce
