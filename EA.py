@@ -1,15 +1,15 @@
 
 import sys
 from FitnessEval import FitnessEval
-from Individual import Individual
+from Individual import OneMaxIndividual
 from Plotting import Plotting
 import random
 
 class EA:
     
-    population_size = 20 #Size of the population
+    population_size = 28 #Size of the population
     generations = 200 #Number of generations
-    generation = 0 #Current generation nr
+    generation = 0 #Current generation number
     fitness_goal = 40 #The fitness goal
     k = 4 #Group size in k_tournament
     e = 0.2 #Probability of selecting random in k_tournament
@@ -36,7 +36,7 @@ class EA:
         
     def create(self):
         for _ in range(0, self.population_size):
-            self.population.append(Individual())
+            self.population.append(OneMaxIndividual())
     
     def develop(self):
         for p in self.population:
@@ -44,18 +44,22 @@ class EA:
     
     def select(self):
         self.population_fitness = []
-        for p in self.population:
-            p.calc_fitness()
+        FitnessEval().calc_fitness(self.population)
             
+        population_fitness = [p.fitness for p in self.population]   
+        average_fitness = self.sum_population()/len(self.population)
         best_individual = self.sorted_population()[0]
         if best_individual.fitness == self.fitness_goal:
             print "SOLUTION FOUND: "+str(best_individual.phenotype)+ " " +str( best_individual.fitness )
+            self.plotter.update(self.generation, best_individual.fitness, average_fitness, sum( map(lambda x: (x - average_fitness)**2, population_fitness) )  )
+            self.plotter.plot()
             sys.exit()
-            
+        
         if((self.generation%2) == 0):
             print "GENERATION:: " +str(self.generation)
             print "Max fitness: " +str(best_individual.fitness) +": " + str(best_individual.phenotype)
-            print "Avg fitness: " +str( (self.sum_population()/len(self.population)) )
+            print "Avg fitness: " +str( average_fitness )
+        self.plotter.update(self.generation, best_individual.fitness, average_fitness, sum( map(lambda x: (x - average_fitness)**2, population_fitness) )  )
         
         self.reproducers = self.selects.fitness_proportionate(self.population, self.sum_population())
 
@@ -75,6 +79,8 @@ class EA:
         self.generation += 1
         self.population = Selection().full_gen_replacement(self.population, self.children)
           
+          
+    
     def sorted_population(self):
         return sorted(self.population, lambda x, y: cmp(x.fitness, y.fitness))[::-1]
     
@@ -99,10 +105,10 @@ class Selection:
     def full_gen_replacement(self, population, children):
         return children
         
-    def over_production(self):
+    def over_production(self, population, children):
         return False
     
-    def generational_mixing(self):
+    def generational_mixing(self, population, children):
         return False
         
         
@@ -132,8 +138,10 @@ class Selection:
     #Sigma scaling of fitness and spins the wheel 
     def sigma_scaling(self, population, sum_fitness):
         expected_mating = []
+        population_fitness = [p.fitness for p in population]
+            
         average_fitness = sum_fitness/len(population)
-        standard_deviation = sum( map(lambda x: (x - average_fitness)**2, sum_fitness) )
+        standard_deviation = sum( map(lambda x: (x - average_fitness)**2, population_fitness) )
         mating_wheel = []
         for p in population:
             expected_mating = int(1 + ( (p.fitness-average_fitness) / 2*standard_deviation ))
@@ -191,5 +199,4 @@ if __name__ == '__main__':
         ea.reproduce()
         ea.operate()
         ea.replace()
-    
     ea.plotter.plot()

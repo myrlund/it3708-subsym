@@ -1,9 +1,25 @@
 import random
 from FitnessEval import FitnessEval
 import sys
+from abc import*
+
+class Individual:
+    
+    @abstractmethod
+    def mutate(self, mutation_prob): pass
+    
+    @abstractmethod
+    def crossover(self, other): pass
+    
+    @abstractmethod
+    def development(self): pass
+    
+    @abstractmethod
+    def set_fitness(self, fitness):
+        self.fitness = fitness
 
 #A Individual in the population
-class Individual:
+class OneMaxIndividual(Individual):
 
     nr_of_bits = 40
     
@@ -61,12 +77,9 @@ class Individual:
             self.phenotype.insert(0, gtype % 2)
             gtype = gtype/2
             
-    def calc_fitness(self):
-        self.fitness = FitnessEval().calc_fitness(self.phenotype)
-
     def num_to_bitstring(self, n, l=20):
         return bin(n)[2:].zfill(l)
-        
+
 
 #if __name__ == '__main__':
 #    
