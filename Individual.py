@@ -44,11 +44,8 @@ class OneMaxIndividual(Individual):
     #Mutate the genotypes, with a probability of mutation_prob  
     def mutate(self, mutation_prob, mutation_count):
         if random.random() < mutation_prob:
-            print "MUTATING!"
             self.genotype = self.genotype ^ (1 << random.randint(0, self.nr_of_bits))
-        else:
-            self.genotype = self.genotype
-        return self.genotype
+        
         
     #Perform crossover on genotypes
     def crossover(self, other, crossover_rate):
@@ -83,67 +80,3 @@ class OneMaxIndividual(Individual):
             
     def num_to_bitstring(self, n, l=20):
         return bin(n)[2:].zfill(l)
-
-
-#if __name__ == '__main__':
-#    
-#    
-#    # 1. Create initial random population, develop to phenotype
-#    # 2. Evaluate the fitness of each individual in the Population, do we have solution?
-#    # 3. Select the individuals to reproduce
-#    # 4. Create offspring genotypes
-#    # 5. Mutate and crossover
-#    # 6. Make new population i.e. develop new generation and kill old one
-#    # 7. Back to step 2.
-#        
-#    nr_of_bits = 20
-#    population_size = 10000
-#    #Create initial population genotype
-#    population_genotype = Population(nr_of_bits, population_size).create_population()
-#    
-#    #Develop
-#    population = []
-#    for p in population_genotype:
-#        population.append(Development().development(p, nr_of_bits))
-#    
-#    for i in range(0, 600):
-#        #Fitness
-#        population_fitness = []
-#        for p in population:
-#            population_fitness.append(FitnessEval().calc_fitness(p))
-#            
-#        solution = max(population_fitness)
-#        if solution ==nr_of_bits:
-#            print "SOLUTION FOUND"
-#            sys.exit()
-#            
-#        if((i%10) == 0):
-#            print "GENERATION:: " +str(i)
-#            print "Max fitness: "+str(max(population_fitness))
-#            print "Avg fitness: "+str( (sum(population_fitness)/len(population_fitness)) )
-#        
-#        #Selection of reproducing adults
-#        k = 5
-#        reproducers = Selection().k_tournament(population_fitness, k)
-#        
-#        #Reproduce: Create children genotypes from reproducing adults, reproducers get to reproduce alot here!
-#        children_genotypes = []
-#        for n in range(0, k):
-#            for i in reproducers:
-#                children_genotypes.append(population_genotype[i])
-#        
-#        #Mutate & Crossover
-#        mutated_genotypes = []
-#        for i in children_genotypes:
-#            mutated_genotypes.append(GeneticOperators().mutate(i, nr_of_bits))
-#            
-#        #Develop
-#        new_generation = []
-#        for i in mutated_genotypes:
-#            new_generation.append(Development().development(i, nr_of_bits))
-#        
-#        #Selection Protocol
-#        population = Selection().full_gen_replacement(population, new_generation)
-#        population_genotype = children_genotypes
-#        
-#        #START OVER MAKE A FOR FFS! GTG!

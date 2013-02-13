@@ -3,18 +3,19 @@ import sys
 from FitnessEval import FitnessEval
 from Individual import OneMaxIndividual
 from Plotting import Plotting
+from Blotto import Blotto
 import random
 
 class EA:
     
     population_size = 28 #Size of the population
-    generations = 200 #Number of generations
+    generations = 20000 #Number of generations
     generation = 0 #Current generation number
     fitness_goal = 40 #The fitness goal
     crossover_rate = 1 #The rate of which to perform crossover
     k = 4 #Group size in k_tournament
     e = 0.2 #Probability of selecting random in k_tournament
-    mutation_probability = 1 #Probability that mutation of a specimen will occur
+    mutation_probability = 0.3 #Probability that mutation of a specimen will occur
     mutation_count = 1 #Number of bits mutated when mutating
 
     population_genotype = []
@@ -27,8 +28,6 @@ class EA:
     develops = None
     adult_selection_fn = None
     parent_selection_fn = None
-    operates = None
-    populates = None
     fitness = None
     
     def __init__(self, individual_type, fitness_fn, adult_selection_fn, parent_selection_fn):
@@ -37,6 +36,9 @@ class EA:
         self.fitness = fitness_fn
         self.plotter = Plotting(self)
         self.individual_type = individual_type
+        self.overproduction_factor = 1
+        self.rank_max = 2
+        self.rank_min = 0
         
     def create(self):
         for _ in range(0, self.population_size):
@@ -65,11 +67,12 @@ class EA:
             print "Avg fitness: " +str( average_fitness )
         self.plotter.update(self.generation, best_individual.fitness, average_fitness, sum( map(lambda x: (x - average_fitness)**2, population_fitness) )  )
         
-        overproduction_factor = 1
-        if self.adult_selection_fn is Selection.over_production:
-            #Overproduce
-            overproduction_factor = int( raw_input("Over production factor: ") )
-        self.reproducers = self.parent_selection_fn(self.population, self.sum_population(), overproduction_factor, self.k, self.e)
+        if self.parent_selection_fn is Selection.rank:
+            self.rank_max = int( raw_input("Rank selection Max: ") )
+            self.rank_min = int( raw_input("Rank selection Min: ") )
+        if self.adult_selection_fn is Selection.over_production and self.overproduction_factor is 1:
+            self.overproduction_factor = int( raw_input("Over production factor: ") )
+        self.reproducers = self.parent_selection_fn(self.population, self.sum_population(), self.overproduction_factor, self.rank_min, self.rank_max, self.k, self.e)
         
     
     def reproduce(self):
@@ -129,7 +132,7 @@ class Selection:
     #SELECTION MECHANISMS    
     #Fitness proportionate scaling of fitness and spins the wheel
     @staticmethod
-    def fitness_proportionate(population, sum_fitness, op,  k=0, e=0):
+    def fitness_proportionate(population, sum_fitness, op, rank_min, rank_max,  k=0, e=0):
         expected_mating = []
         average_fitness = sum_fitness/len(population)
         mating_wheel = []
@@ -147,7 +150,7 @@ class Selection:
        
     #Sigma scaling of fitness and spins the wheel 
     @staticmethod
-    def sigma_scaling(population, sum_fitness, op, k=0, e=0):
+    def sigma_scaling(population, sum_fitness, op, rank_min, rank_max, k=0, e=0):
         expected_mating = []
         population_fitness = [p.fitness for p in population]
             
@@ -168,41 +171,45 @@ class Selection:
     #Rank scaling of fitness and spins the wheel
     #TODO
     @staticmethod
-    def rank(self, population, sum_fitness, op, k=0, e=0):
+    def rank(population, sum_fitness, op, rank_min, rank_max, k=0, e=0):
         expected_mating = []
-        average_fitness = sum_fitness/len(population)
+        sorted_population = sorted(population, lambda x, y: cmp(x.fitness, y.fitness))[::-1]
         mating_wheel = []
-        for i in range(0, len(population)):
-            expected_mating = min + (max-min)*()
+        for p in population:
+            rank = (sorted_population.index(p)+1)
+            expected_mating = int( rank_min+(rank_max-rank_min)*((rank-1)/(len(population))) )
+            print rank
             for _ in range(0, expected_mating):
-                mating_wheel.append(i)
+                mating_wheel.append(p)
             
-        #THEN SPIN ZE WHEEEEL
+        #THEN SPIN ZE WHEEEEL, make own method? and proper! this is crap
         reproducers = []
         for _ in range(0, int(len(population)*op) ):
             reproducers.append( mating_wheel[random.randint(0,len(mating_wheel)-1)] )
         
-        return reproducers
+        return reproducers 
     
 
     #Selects the index of the reproducers in the population by means of local k-tournament, currently only works on popsizes divisible by k
     #TODO: Doesn't work i thinks
     @staticmethod
-    def k_tournament(population, sum_fitness, op, k, e):
+    def k_tournament(population, sum_fitness, op, rank_min, rank_max, k, e):
         reproducers = []
         group_k = k
         for i in range(0, len(population)):
             if i == group_k-1:
                 #FACE-OFF!
                 tournament_group = population[(i-(k-1)):group_k]
-                for _ in int(len(tournament_group)*op):
+                for _ in range(int(len(tournament_group)*op)):
                     if random.random()<e:
-                        reproducers.append( population[random.randint(0, k-1) + (group_k-k)] )
+                        reproducers.append( tournament_group[random.randint(0, k-1)] )
                     else:
-                        reproducers.append( population[tournament_group.index(max(tournament_group)) + (group_k-k)] )
+                        tournament_group = sorted(tournament_group, lambda x, y: cmp(x.fitness, y.fitness))[::-1]
+                        reproducers.append( tournament_group[0] )
                 group_k = group_k + k
         return reproducers
     
+   
     
 FITNESS_FUNCTIONS = {1: FitnessEval.one_max_fitness,
                      2: FitnessEval.blotto_fitness}
@@ -215,7 +222,9 @@ PARENT_SELECTION_FUNCTIONS = {1: Selection.fitness_proportionate,
 ADULT_SELECTION_FUNCTIONS = {1: Selection.full_gen_replacement, 
                              2: Selection.over_production, 
                              3: Selection.generational_mixing}
-    
+
+INDIVIDUAL_TYPE = {1: OneMaxIndividual,
+                   2: Blotto}    
     #TODO: implement input
 if __name__ == '__main__':
     fitness_nr = int( raw_input("Fitness function: ") )
