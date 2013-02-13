@@ -18,6 +18,12 @@ class Individual:
     def set_fitness(self, fitness):
         self.fitness = fitness
 
+    def __str__(self):
+        return str(self.phenotype)
+        
+    def __repr__(self):
+        return self.__str__()
+    
 #A Individual in the population
 class OneMaxIndividual(Individual):
 
@@ -31,43 +37,41 @@ class OneMaxIndividual(Individual):
         else:
             self.genotype=genotype
             
-    def __str__(self):
-        return str(self.phenotype)
-        
-    def __repr__(self):
-        return self.__str__()
     
     def random_genotype(self):
         self.genotype = random.getrandbits(self.nr_of_bits)
                  
     #Mutate the genotypes, with a probability of mutation_prob  
-    def mutate(self, mutation_prob):
+    def mutate(self, mutation_prob, mutation_count):
         if random.random() < mutation_prob:
+            print "MUTATING!"
             self.genotype = self.genotype ^ (1 << random.randint(0, self.nr_of_bits))
         else:
             self.genotype = self.genotype
         return self.genotype
         
     #Perform crossover on genotypes
-    def crossover(self, other):
-        crossover_range = (2, 5)
-        splits = [(i % 2, random.randint(*crossover_range)) for i in range(self.nr_of_bits / crossover_range[0])]
-        
-        genotypes = (self.num_to_bitstring(self.genotype), self.num_to_bitstring(other.genotype))
-        
-        new_genotype = []
-        index = 0
-        for individual, n_genes in splits:
-            to_index = min(index+n_genes, self.nr_of_bits)
-            new_genotype.append(genotypes[individual][index:to_index])
+    def crossover(self, other, crossover_rate):
+        if random.random()<crossover_rate:
+            crossover_range = (2, 5)
+            splits = [(i % 2, random.randint(*crossover_range)) for i in range(self.nr_of_bits / crossover_range[0])]
             
-            if to_index >= self.nr_of_bits:
-                break
+            genotypes = (self.num_to_bitstring(self.genotype), self.num_to_bitstring(other.genotype))
             
-            index += n_genes
-        
-        return Individual(int("".join(new_genotype), 2))
-    
+            new_genotype = []
+            index = 0
+            for individual, n_genes in splits:
+                to_index = min(index+n_genes, self.nr_of_bits)
+                new_genotype.append(genotypes[individual][index:to_index])
+                
+                if to_index >= self.nr_of_bits:
+                    break
+                
+                index += n_genes
+            
+            return OneMaxIndividual(int("".join(new_genotype), 2))
+        else:
+            return OneMaxIndividual(self.genotype)
 
     #Develop the individual from genotype to phenotype  
     def development(self):
