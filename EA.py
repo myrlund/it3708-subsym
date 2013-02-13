@@ -9,7 +9,7 @@ import random
 class EA:
     
     population_size = 28 #Size of the population
-    generations = 20000 #Number of generations
+    generations = 200 #Number of generations
     generation = 0 #Current generation number
     fitness_goal = 40 #The fitness goal
     crossover_rate = 1 #The rate of which to perform crossover
@@ -137,7 +137,10 @@ class Selection:
         average_fitness = sum_fitness/len(population)
         mating_wheel = []
         for p in population:
-            expected_mating = int(round(p.fitness/average_fitness))
+            if average_fitness is 0:
+                expected_mating = 1
+            else:
+                expected_mating = int(round(p.fitness/average_fitness))
             for _ in range(0, expected_mating):
                 mating_wheel.append(p) 
             
@@ -158,7 +161,10 @@ class Selection:
         standard_deviation = sum( map(lambda x: (x - average_fitness)**2, population_fitness) )
         mating_wheel = []
         for p in population:
-            expected_mating = int(1 + ( (p.fitness-average_fitness) / 2*standard_deviation ))
+            if standard_deviation is 0:
+                expected_mating = 1
+            else:
+                expected_mating = int(1 + ( (p.fitness-average_fitness) / 2*standard_deviation ))
             for _ in range(0, expected_mating):
                 mating_wheel.append(p) #Indexes
         #THEN SPIN ZE WHEEEEL
