@@ -3,16 +3,17 @@ import sys
 from FitnessEval import FitnessEval
 from Individual import OneMaxIndividual
 from Plotting import Plotting
+from Plotting import Blotting
 from Blotto import Blotto
 import random
 
 class EA:
     
     population_size = 20 #Size of the population
-    generations = 200 #Number of generations
+    generations = 100 #Number of generations
     generation = 0 #Current generation number
     fitness_goal = 40 #The fitness goal
-    crossover_rate = 0.6 #The rate of which to perform crossover
+    crossover_rate = 1.0 #The rate of which to perform crossover
     k = 4 #Group size in k_tournament
     e = 0.1 #Probability of selecting random in k_tournament
     mutation_probability = 0.3 #Probability that mutation of a specimen will occur
@@ -30,11 +31,11 @@ class EA:
     parent_selection_fn = None
     fitness = None
     
-    def __init__(self, individual_type, fitness_fn, adult_selection_fn, parent_selection_fn):
+    def __init__(self, individual_type, fitness_fn, adult_selection_fn, parent_selection_fn, plotting_fn):
         self.adult_selection_fn = adult_selection_fn
         self.parent_selection_fn = parent_selection_fn
         self.fitness = fitness_fn
-        self.plotter = Plotting(self)
+        self.plotter = plotting_fn(self)
         self.individual_type = individual_type
         self.overproduction_factor = 1
         self.rank_max = 2
@@ -52,20 +53,15 @@ class EA:
         self.population_fitness = []
         self.fitness(self.population)
             
-        population_fitness = [p.fitness for p in self.population]   
-        average_fitness = self.sum_population()/len(self.population)
-        best_individual = self.sorted_population()[0]
-#        if best_individual.fitness == self.fitness_goal:
-#            print "SOLUTION FOUND: "+str(best_individual.phenotype)+ " " +str( best_individual.fitness )
-#            self.plotter.update(self.generation, best_individual.fitness, average_fitness, sum( map(lambda x: (x - average_fitness)**2, population_fitness) )  )
-#            self.plotter.plot()
-#            sys.exit()
-#        
+        population_fitness = [p.fitness for p in self.population]
+        self.average_fitness = self.sum_population()/len(self.population)
+        self.best_individual = self.sorted_population()[0]
+        self.std_deviation = sum( map(lambda x: (x - self.average_fitness)**2, population_fitness) )   
+  
         if((self.generation%2) == 0):
             print "GENERATION:: " +str(self.generation)
-            print "Max fitness: " +str(best_individual.fitness) +": " + str(best_individual.phenotype)
-            print "Avg fitness: " +str( average_fitness )
-        self.plotter.update(self.generation, best_individual.fitness, average_fitness, sum( map(lambda x: (x - average_fitness)**2, population_fitness) )  )
+            print "Max fitness: " +str(self.best_individual.fitness) +": " + str(self.best_individual.phenotype)
+        self.plotter.update()
         
         if self.parent_selection_fn is Selection.rank:
             self.rank_max = float( raw_input("Rank selection Max: ") )
@@ -230,14 +226,19 @@ ADULT_SELECTION_FUNCTIONS = {1: Selection.full_gen_replacement,
                              3: Selection.generational_mixing}
 
 INDIVIDUAL_TYPE = {1: OneMaxIndividual,
-                   2: Blotto}    
+                   2: Blotto}  
+
+PLOT_TYPE = {1: Plotting, 
+             2: Blotting}  
+
+
     #TODO: implement input
 if __name__ == '__main__':
     individual_type = int( raw_input("OneMax or Blotto "))
     parent_selection_nr = int( raw_input("Parent Selection: ") )
     adult_selection_nr = int( raw_input("Adult selection: ") )
     
-    ea = EA(INDIVIDUAL_TYPE[individual_type], FITNESS_FUNCTIONS[individual_type], ADULT_SELECTION_FUNCTIONS[adult_selection_nr], PARENT_SELECTION_FUNCTIONS[parent_selection_nr])
+    ea = EA(INDIVIDUAL_TYPE[individual_type], FITNESS_FUNCTIONS[individual_type], ADULT_SELECTION_FUNCTIONS[adult_selection_nr], PARENT_SELECTION_FUNCTIONS[parent_selection_nr], PLOT_TYPE[individual_type])
     ea.create()
     ea.develop()
     for _ in range(0, ea.generations):

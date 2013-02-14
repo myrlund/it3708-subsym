@@ -4,9 +4,9 @@ from Individual import*
 
 class Blotto(Individual):
     
-    B = 5 #The number of battles to be fought
+    B = 20 #The number of battles to be fought
     S = 50 #The total number of troops at disposal
-    L = 0.1 #The loss factor of the strength factor, decrement when a battle is lost
+    L = 1.0 #The loss factor of the strength factor, decrement when a battle is lost
     R = 0.1 #The re-deployment factor, factor of troops allowed to redeploy after winning a battle
     
     
@@ -98,4 +98,4 @@ if __name__ == '__main__':
         
     FitnessEval.blotto_fitness(population)
     
-    print [p.fitness for p in population]
+    Oppgaven skal ligge på Historisk Institutt, til høyre når du kommer inn døren og opp en etasje og følge skilting, det skal visstnok stå noe som "Historisk institutt ligger helt i enden av gangen". Når du kommer inn dit er det bare å følge gangen til du kommer til et slags kopirom på venstre side, her skal oppgaven ligge i en hylle merket "Timelærer".
