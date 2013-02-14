@@ -8,11 +8,11 @@ import random
 
 class EA:
     
-    population_size = 28 #Size of the population
+    population_size = 20 #Size of the population
     generations = 200 #Number of generations
     generation = 0 #Current generation number
     fitness_goal = 40 #The fitness goal
-    crossover_rate = 1 #The rate of which to perform crossover
+    crossover_rate = 0.6 #The rate of which to perform crossover
     k = 4 #Group size in k_tournament
     e = 0.1 #Probability of selecting random in k_tournament
     mutation_probability = 0.3 #Probability that mutation of a specimen will occur
@@ -55,12 +55,12 @@ class EA:
         population_fitness = [p.fitness for p in self.population]   
         average_fitness = self.sum_population()/len(self.population)
         best_individual = self.sorted_population()[0]
-        if best_individual.fitness == self.fitness_goal:
-            print "SOLUTION FOUND: "+str(best_individual.phenotype)+ " " +str( best_individual.fitness )
-            self.plotter.update(self.generation, best_individual.fitness, average_fitness, sum( map(lambda x: (x - average_fitness)**2, population_fitness) )  )
-            self.plotter.plot()
-            sys.exit()
-        
+#        if best_individual.fitness == self.fitness_goal:
+#            print "SOLUTION FOUND: "+str(best_individual.phenotype)+ " " +str( best_individual.fitness )
+#            self.plotter.update(self.generation, best_individual.fitness, average_fitness, sum( map(lambda x: (x - average_fitness)**2, population_fitness) )  )
+#            self.plotter.plot()
+#            sys.exit()
+#        
         if((self.generation%2) == 0):
             print "GENERATION:: " +str(self.generation)
             print "Max fitness: " +str(best_individual.fitness) +": " + str(best_individual.phenotype)
@@ -233,12 +233,11 @@ INDIVIDUAL_TYPE = {1: OneMaxIndividual,
                    2: Blotto}    
     #TODO: implement input
 if __name__ == '__main__':
-    fitness_nr = int( raw_input("Fitness function: ") )
+    individual_type = int( raw_input("OneMax or Blotto "))
     parent_selection_nr = int( raw_input("Parent Selection: ") )
     adult_selection_nr = int( raw_input("Adult selection: ") )
-    individual_type = OneMaxIndividual
     
-    ea = EA(individual_type, FITNESS_FUNCTIONS[fitness_nr], ADULT_SELECTION_FUNCTIONS[adult_selection_nr], PARENT_SELECTION_FUNCTIONS[parent_selection_nr])
+    ea = EA(INDIVIDUAL_TYPE[individual_type], FITNESS_FUNCTIONS[individual_type], ADULT_SELECTION_FUNCTIONS[adult_selection_nr], PARENT_SELECTION_FUNCTIONS[parent_selection_nr])
     ea.create()
     ea.develop()
     for _ in range(0, ea.generations):
