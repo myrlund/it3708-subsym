@@ -6,8 +6,8 @@ class Blotto(Individual):
     
     B = 5 #The number of battles to be fought
     S = 50 #The total number of troops at disposal
-    L = 1 #The loss factor of the strength factor, decrement when a battle is lost
-    R = 0.0 #The re-deployment factor, factor of troops allowed to redeploy after winning a battle
+    L = 0.1 #The loss factor of the strength factor, decrement when a battle is lost
+    R = 0.1 #The re-deployment factor, factor of troops allowed to redeploy after winning a battle
     
     
     def __init__(self, genotype=None):
