@@ -1,23 +1,23 @@
 from copy import copy
+import random
 
 #Class for evaluation the fitness of a given phenotuype.
 
 class FitnessEval:
     
-    #TODO: Change the fitness calculation to a likeness function!
-    
-    
-    #Receives list of a population of binary lists
-    #fitness gets higher(worse) if there are many zero's
+
     @staticmethod
     def one_max_fitness(population):
+#        goal_bits = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        goal_bits = [random.randint(0,1) for _ in range(0,40)]
+        print goal_bits
         for individual in population:
-            fitness = 0;
-            for i in individual.phenotype:
-                if i == 1:
+            fitness = 0
+            for p,g in zip(individual.phenotype, goal_bits):
+                if p==g:
                     fitness += 1
             individual.set_fitness(fitness)
-            
+
     #Receives list of a population of blotto strategies, pits every commanders against
     #each other, awards fitness points when winning war against another commander
     @staticmethod
@@ -62,4 +62,4 @@ class FitnessEval:
                     opposing_commander.increment_fitness(1)
                 commander.reset()
                 opposing_commander.reset()
-    
+                
