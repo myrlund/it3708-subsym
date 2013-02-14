@@ -14,7 +14,7 @@ class EA:
     fitness_goal = 40 #The fitness goal
     crossover_rate = 1 #The rate of which to perform crossover
     k = 4 #Group size in k_tournament
-    e = 0.2 #Probability of selecting random in k_tournament
+    e = 0.1 #Probability of selecting random in k_tournament
     mutation_probability = 0.3 #Probability that mutation of a specimen will occur
     mutation_count = 1 #Number of bits mutated when mutating
 
@@ -68,8 +68,8 @@ class EA:
         self.plotter.update(self.generation, best_individual.fitness, average_fitness, sum( map(lambda x: (x - average_fitness)**2, population_fitness) )  )
         
         if self.parent_selection_fn is Selection.rank:
-            self.rank_max = int( raw_input("Rank selection Max: ") )
-            self.rank_min = int( raw_input("Rank selection Min: ") )
+            self.rank_max = float( raw_input("Rank selection Max: ") )
+            self.rank_min = float( raw_input("Rank selection Min: ") )
         if self.adult_selection_fn is Selection.over_production and self.overproduction_factor is 1:
             self.overproduction_factor = int( raw_input("Over production factor: ") )
         self.reproducers = self.parent_selection_fn(self.population, self.sum_population(), self.overproduction_factor, self.rank_min, self.rank_max, self.k, self.e)
