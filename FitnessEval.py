@@ -8,8 +8,7 @@ class FitnessEval:
 
     @staticmethod
     def one_max_fitness(population):
-#        goal_bits = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        goal_bits = [random.randint(0,1) for _ in range(0,40)]
+        goal_bits = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         print goal_bits
         for individual in population:
             fitness = 0
@@ -30,20 +29,18 @@ class FitnessEval:
             for opposing_commander in population_copy:
                 
                 #Execute a WAR!
-#                print "WAR: "+str(commander)+" vs. "+str(opposing_commander)
                 points_commander = 0
                 points_opponent = 0
                 battle_nr = 0
                 for i,j in zip(commander.phenotype, opposing_commander.phenotype):
                     i = i*commander.get_strength()
                     j = j*opposing_commander.get_strength()
+
                     if i>j:
-#                        print "BATTLE "+str(battle_nr)+" WINNER: "+str(commander)
                         points_commander+=2
                         commander.re_deploy(battle_nr, i-j)
                         opposing_commander.decrement_strength()
                     if i<j:
-#                        print "BATTLE "+str(battle_nr)+" WINNER: "+str(opposing_commander)
                         points_opponent+=2
                         opposing_commander.re_deploy(battle_nr, j-i)
                         commander.decrement_strength()
@@ -51,13 +48,10 @@ class FitnessEval:
                     
                 #WAR done, increment fitness of winner based on points
                 if points_commander>points_opponent:
-#                    print "WAR WINNER: "+str(commander)
                     commander.increment_fitness(2)
                 if points_commander<points_opponent:
-#                    print "WAR WINNER: "+str(opposing_commander)
                     opposing_commander.increment_fitness(2)
                 if points_commander==points_opponent:
-#                    print "DRAW"
                     commander.increment_fitness(1)
                     opposing_commander.increment_fitness(1)
                 commander.reset()

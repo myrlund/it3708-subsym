@@ -171,7 +171,6 @@ class Selection:
         return reproducers
         
     #Rank scaling of fitness and spins the wheel
-    #TODO
     @staticmethod
     def rank(population, sum_fitness, op, rank_min, rank_max, k=0, e=0):
         expected_mating = []
@@ -232,7 +231,6 @@ PLOT_TYPE = {1: Plotting,
              2: Blotting}  
 
 
-    #TODO: implement input
 if __name__ == '__main__':
     individual_type = int( raw_input("OneMax or Blotto "))
     parent_selection_nr = int( raw_input("Parent Selection: ") )
